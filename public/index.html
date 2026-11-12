@@ -56,10 +56,7 @@ body{
   font:15px/1.6 Geist,system-ui,-apple-system,"Segoe UI",sans-serif;
   -webkit-font-smoothing:antialiased;
   background-image:
-    radial-gradient(50rem 26rem at 50% -10rem, var(--sand-glow), transparent 70%),
-    linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size:auto, 64px 64px, 64px 64px;
+    radial-gradient(50rem 26rem at 50% -10rem, var(--sand-glow), transparent 70%);
   background-attachment:fixed;
   min-height:100vh;
 }
@@ -118,8 +115,14 @@ h1 em{font-style:normal;color:var(--sand)}
 .chip span{color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chip.bad{border-color:color-mix(in srgb,var(--warn) 40%,transparent);background:var(--warn-bg)}
 .chip.bad span{color:var(--warn)}
-.chip button{display:grid;place-items:center;width:24px;height:24px;border-radius:5px;border:0;background:none;color:var(--faint);cursor:pointer;font-size:15px;line-height:1}
-.chip button:hover{background:var(--surface-2);color:var(--text)}
+.chip button{display:grid;place-items:center;width:26px;height:26px;border-radius:5px;border:0;background:var(--surface-2);color:var(--muted);cursor:pointer;font-size:17px;line-height:1}
+.chip button:hover,.chip button:focus-visible{background:var(--hot);color:#fff}
+.squad-h button{margin-left:10px;padding:0;border:0;background:none;font:inherit;letter-spacing:inherit;text-transform:inherit;color:var(--muted);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.squad-h button:hover{color:var(--text)}
+.undo{display:flex;justify-content:center;align-items:center;gap:10px;margin:12px auto 0;font-size:13.5px;color:var(--muted)}
+.undo button{padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);font:inherit;cursor:pointer}
+.undo button:hover{background:var(--surface-2)}
+[hidden]{display:none!important}
 @keyframes pop{from{transform:scale(.94);opacity:0}}
 
 /* secciones */
@@ -263,8 +266,9 @@ footer a{color:var(--muted)}
     </form>
     <p class="hint">Uno a uno o pega tu lista completa: <code>TICS312 1, TICS400 1</code></p>
     <div id="msg" class="msg" hidden></div>
-    <p class="squad-h" id="squadH" hidden>Tu pelotón</p>
+    <p class="squad-h" id="squadH" hidden>Tu pelotón <button type="button" id="clearAll">Retirar a todos</button></p>
     <div id="chips" class="chips"></div>
+    <div id="undo" class="undo" hidden><span id="undoTxt"></span><button type="button" id="undoBtn">Deshacer</button></div>
   </header>
 
   <div id="next" class="next" hidden></div>
@@ -567,7 +571,27 @@ footer a{color:var(--muted)}
   });
   $("#chips").addEventListener("click", ev => {
     const i = ev.target.closest("button[data-i]")?.dataset.i;
-    if (i != null) { state.ramos.splice(+i, 1); msg(""); render(); }
+    if (i != null) { const [r] = state.ramos.splice(+i, 1); msg(""); render(); avisarRetiro([r], [+i]); }
+  });
+  $("#clearAll").addEventListener("click", () => {
+    const todos = state.ramos.slice();
+    if (!todos.length) return;
+    state.ramos = []; msg(""); render();
+    avisarRetiro(todos, null);
+  });
+  let undoData = null, undoTimer = 0;
+  function avisarRetiro(ramos, idx) {
+    undoData = { ramos, idx };
+    $("#undoTxt").textContent = ramos.length === 1 ? `Retiraste ${key(ramos[0])}.` : `Retiraste ${ramos.length} ramos.`;
+    $("#undo").hidden = false;
+    clearTimeout(undoTimer);
+    undoTimer = setTimeout(() => { $("#undo").hidden = true; undoData = null; }, 8000);
+  }
+  $("#undoBtn").addEventListener("click", () => {
+    if (!undoData) return;
+    if (undoData.idx) undoData.ramos.forEach((r, k) => { if (!state.ramos.some(x => key(x) === key(r))) state.ramos.splice(Math.min(undoData.idx[k], state.ramos.length), 0, r); });
+    else for (const r of undoData.ramos) if (!state.ramos.some(x => key(x) === key(r))) state.ramos.push(r);
+    undoData = null; $("#undo").hidden = true; clearTimeout(undoTimer); render();
   });
   document.querySelectorAll("input[name=sede]").forEach(r => r.addEventListener("change", () => {
     state.sede = r.value; renderDatalist(); render();
