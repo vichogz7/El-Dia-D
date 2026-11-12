@@ -51,4 +51,4 @@ Publicado en [Vercel](https://vercel.com) (plan gratuito). Cada `git push` a `ma
 - En exámenes orales y presentaciones la UAI publica el bloque completo; la hora exacta la define el profesor.
 - Cada app decide cada cuánto revisa el calendario suscrito: Google tarda 8–24 h; Apple y Outlook, algunas horas.
 - Si la UAI cambia el formato de sus Excel, hay que ajustar `api/_uai.py`.
-- Si añade ramo y tiene el link guardado, el link dejará de ser el mismo
+- El link de suscripción incluye tus ramos, sede y recordatorio: si agregas o quitas un ramo, el link cambia. Guárdalo o suscríbete solo cuando tengas todos tus ramos (si cambias de ramos, vuelve a suscribirte con el link nuevo).
