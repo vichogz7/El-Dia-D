@@ -22,10 +22,11 @@ Tus ramos quedan guardados en tu navegador y también en la dirección de la pá
 uaidocs (pruebas.xlsx, examenes.xlsx)
         │  se descargan cada ~30 min (caché)
         ▼
-api/_uai.py ── lee los Excel y genera el .ics
-   ├── /api/evaluaciones      → JSON con todas las evaluaciones (lo usa la tabla)
-   └── /calendario.ics?r=...  → calendario personal para suscribirse
-public/index.html             → la página (HTML + JS, sin frameworks)
+api/_uai.py      → lee los Excel y genera el .ics
+api/index.py     → punto de entrada único (Vercel):
+   ├── /                       → la página (public/index.html)
+   ├── /api/evaluaciones       → JSON con todas las evaluaciones (lo usa la tabla)
+   └── /calendario.ics?r=...   → calendario personal para suscribirse
 ```
 
 | Parámetro de `/calendario.ics` | Ejemplo | |
@@ -38,7 +39,7 @@ public/index.html             → la página (HTML + JS, sin frameworks)
 ## Desarrollo
 
 ```bash
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+python3 -m venv .venv && .venv/bin/pip install openpyxl tzdata
 .venv/bin/python dev.py        # → http://localhost:8000
 ```
 
