@@ -32,7 +32,7 @@ public/index.html             → la página (HTML + JS, sin frameworks)
 |---|---|---|
 | `r` | `TICS312-1,TICS400-1` | ramos `SIGLA-SECCIÓN` separados por coma |
 | `sede` | `santiago` / `vina` | |
-| `alarmas` | `1440,60` | minutos antes (opcional) |
+| `alarmas` | `1440,60` | minutos antes {1 dia antes, 1 hora antes} (opcional) |
 | `descargar` | `1` | descarga el archivo en vez de mostrarlo |
 
 ## Desarrollo
