@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.vercel/
+# versión local anterior (mini-app de Mac), ya reemplazada por la página web
+.interno/
+salida/
+config.json
+uai_calendario.py
+*.command
+*.bat
+LEEME.txt

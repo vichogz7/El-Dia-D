@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calendario de Evaluaciones</title>
+<meta name="description" content="Tus pruebas y exámenes UAI en una tabla y en tu calendario, actualizándose solos.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📅</text></svg>">
+<style>
+:root{
+  --bg:#f6f7f9; --card:#fff; --text:#16181d; --muted:#61656f; --line:#e3e5ea;
+  --accent:#2f5bd3; --accent-ink:#fff; --accent-soft:#e8eefc;
+  --prueba:#7a4cc2; --prueba-soft:#f1eafb; --examen:#c2410c; --examen-soft:#fdeee6;
+  --ok:#15803d; --warn-soft:#fff7e0; --warn:#8a6100; --radius:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1115; --card:#181b21; --text:#e8eaef; --muted:#9aa0ab; --line:#2a2e37;
+    --accent:#7ea0ff; --accent-ink:#0f1115; --accent-soft:#1d2640;
+    --prueba:#c4a5f5; --prueba-soft:#2a2140; --examen:#fb9a6b; --examen-soft:#3a2117;
+    --ok:#4ade80; --warn-soft:#2e2712; --warn:#f0c75e;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:860px;margin:0 auto;padding:28px 16px 64px}
+h1{font-size:1.7rem;margin:0 0 4px;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0 0 22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+.card h2{font-size:1rem;margin:0 0 12px}
+.step{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:.8rem;margin-right:6px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg label{padding:8px 14px;cursor:pointer;user-select:none}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label:has(input:checked){background:var(--accent);color:var(--accent-ink)}
+.seg label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:-2px}
+input[type=text],select{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;min-width:0}
+input[type=text]{flex:1 1 240px}
+button,.btn{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text);padding:9px 14px;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+button.primary,.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button:hover,.btn:hover{filter:brightness(.97)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);border-radius:999px;padding:5px 6px 5px 12px;font-size:.92rem}
+.chip small{color:var(--muted)}
+.chip button{border:0;background:transparent;padding:0 6px;font-size:1.05rem;line-height:1;color:var(--muted)}
+.chip.bad{background:var(--warn-soft)}
+.hint{color:var(--muted);font-size:.88rem;margin:8px 0 0}
+.msg{font-size:.9rem;margin-top:8px;color:var(--warn)}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th{text-align:left;color:var(--muted);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+tr.past td{color:var(--muted)}
+tr.past .tag{opacity:.6}
+.date b{display:block}
+.date span,.cd{color:var(--muted);font-size:.85rem}
+.tag{display:inline-block;font-size:.78rem;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.tag.prueba{background:var(--prueba-soft);color:var(--prueba)}
+.tag.examen{background:var(--examen-soft);color:var(--examen)}
+.code{color:var(--muted);font-size:.85rem}
+.soon{color:var(--examen);font-weight:600}
+.empty{color:var(--muted);text-align:center;padding:24px 8px}
+.toggle{font-size:.9rem;color:var(--muted);display:flex;gap:6px;align-items:center;margin-top:10px}
+.subs{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.subs .btn{justify-content:center}
+.link{display:flex;gap:8px;margin-top:12px}
+.link input{flex:1;font-size:.85rem;color:var(--muted)}
+details{margin-top:12px;font-size:.9rem;color:var(--muted)}
+details summary{cursor:pointer}
+footer{color:var(--muted);font-size:.82rem;margin-top:28px;line-height:1.6}
+footer a{color:inherit}
+#estado{font-size:.9rem;color:var(--muted)}
+@media (max-width:600px){
+  thead{display:none}
+  table,tbody,tr,td{display:block;width:100%}
+  tr{padding:10px 0;border-bottom:1px solid var(--line)}
+  td{border:0;padding:2px 0}
+  td.date b,td.date span{display:inline;margin-right:6px}
+}
+@media print{
+  body{background:#fff;color:#000}
+  .noprint,.card:not(#tabla){display:none}
+  .card{border:0;padding:0}
+  tr.past{display:none}
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>📅 Mis evaluaciones UAI</h1>
+  <p class="sub">Escribe tus ramos y verás tus pruebas y exámenes en una tabla. Si quieres, agrégalos a tu calendario y se actualizarán solos.</p>
+
+  <section class="card noprint">
+    <h2><span class="step">1</span>Tu sede</h2>
+    <div class="seg" role="radiogroup" aria-label="Sede">
+      <label><input type="radio" name="sede" value="santiago" checked> Santiago</label>
+      <label><input type="radio" name="sede" value="vina"> Viña del Mar</label>
+    </div>
+  </section>
+
+  <section class="card noprint">
+    <h2><span class="step">2</span>Tus ramos</h2>
+    <form id="addForm" class="row" autocomplete="off">
+      <input type="text" id="ramoInput" list="ramosList" placeholder="Sigla y sección, ej: TICS312 1" aria-label="Ramo">
+      <datalist id="ramosList"></datalist>
+      <button class="primary" type="submit">Agregar</button>
+    </form>
+    <p class="hint">Escribe la sigla para ver sugerencias. También puedes pegar varios separados por coma: <i>TICS312 1, TICS400 1</i></p>
+    <div id="msg" class="msg" hidden></div>
+    <div id="chips" class="chips"></div>
+  </section>
+
+  <section class="card" id="tabla">
+    <div class="row" style="justify-content:space-between">
+      <h2 style="margin:0"><span class="step noprint">3</span>Tus fechas</h2>
+      <div class="row noprint">
+        <button type="button" id="csvBtn" title="Descargar para Excel">⬇️ Excel</button>
+        <button type="button" onclick="print()" title="Imprimir o guardar como PDF">🖨️ Imprimir</button>
+      </div>
+    </div>
+    <p id="estado">Cargando calendario oficial…</p>
+    <table>
+      <thead><tr><th>Fecha</th><th>Hora</th><th>Evaluación</th><th>Ramo</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <label class="toggle noprint"><input type="checkbox" id="showPast"> Mostrar evaluaciones que ya pasaron</label>
+  </section>
+
+  <section class="card noprint" id="subsCard">
+    <h2><span class="step">4</span>Agregar a mi calendario <small style="color:var(--muted);font-weight:400">(opcional)</small></h2>
+    <div class="row" style="margin-bottom:12px">
+      <label for="alarmas">Alarmas:</label>
+      <select id="alarmas">
+        <option value="">Sin alarmas</option>
+        <option value="1440">1 día antes</option>
+        <option value="60">1 hora antes</option>
+        <option value="1440,60">1 día y 1 hora antes</option>
+      </select>
+    </div>
+    <div class="subs">
+      <a class="btn primary" id="appleBtn" href="#">🍎 iPhone / Mac</a>
+      <a class="btn primary" id="googleBtn" href="#" target="_blank" rel="noopener">Google Calendar</a>
+      <a class="btn primary" id="outlookBtn" href="#" target="_blank" rel="noopener">Outlook</a>
+      <a class="btn" id="icsBtn" href="#">⬇️ Descargar .ics</a>
+    </div>
+    <p class="hint">Los tres primeros te <b>suscriben</b>: si la UAI cambia una fecha, tu calendario se actualiza solo. “Descargar .ics” es una copia que no se actualiza.</p>
+    <div class="link">
+      <input type="text" id="subUrl" readonly aria-label="Link de suscripción">
+      <button type="button" id="copyBtn">Copiar link</button>
+    </div>
+    <details>
+      <summary>¿Cada cuánto se actualiza? ¿Y las alarmas?</summary>
+      <p>La página revisa el calendario oficial cada 30 minutos. Cada app de calendario decide cuándo vuelve a consultar: Apple cada pocas horas (en Mac puedes elegir “cada hora”), Outlook cada pocas horas y Google cada 8–24 horas, sin opción para cambiarlo.</p>
+      <p>Google no respeta las alarmas de calendarios suscritos: allí configúralas en ⚙️ → el calendario “UAI Evaluaciones” → Notificaciones. En iPhone/Mac, al suscribirte, desmarca “Eliminar alertas” si quieres conservarlas.</p>
+      <p>En Android, usa la opción de Google Calendar desde un computador; después aparece sola en el celular.</p>
+    </details>
+  </section>
+
+  <footer>
+    <span id="fuente"></span><br>
+    Herramienta <b>no oficial</b> hecha por estudiantes. Toma los datos de las páginas públicas de
+    <a href="https://uaidocs.z20.web.core.windows.net/pruebas/" target="_blank" rel="noopener">pruebas</a> y
+    <a href="https://uaidocs.z20.web.core.windows.net/examenes/" target="_blank" rel="noopener">exámenes</a>.
+    Las fechas pueden cambiar: ante cualquier duda, manda la fuente oficial. No incluye salas, controles ni entregas de Webcursos.
+    Tus ramos se guardan solo en este navegador.
+  </footer>
+</main>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const LS = "uai-cal-v1";
+  let ALL = [];             // todas las evaluaciones
+  let state = { sede: "santiago", ramos: [], alarmas: "" };
+
+  // ---------- estado (localStorage + #hash para compartir) ----------
+  function load() {
+    try { Object.assign(state, JSON.parse(localStorage.getItem(LS) || "{}")); } catch {}
+    const h = new URLSearchParams(location.hash.slice(1));
+    if (h.get("r")) state.ramos = parseList(h.get("r"));
+    if (h.get("sede")) state.sede = h.get("sede");
+    if (h.has("alarmas")) state.alarmas = h.get("alarmas");
+  }
+  function save() {
+    try { localStorage.setItem(LS, JSON.stringify(state)); } catch {}
+    const p = new URLSearchParams({ sede: state.sede, r: rParam() });
+    if (state.alarmas) p.set("alarmas", state.alarmas);
+    history.replaceState(null, "", state.ramos.length ? "#" + p : location.pathname);
+  }
+  const key = r => r.sigla + "-" + r.sec;
+  const rParam = () => state.ramos.map(key).join(",");
+
+  // Acepta: "TICS312 1", "tics312 s1", "TICS316-2", "TEI401, Seccion 6", varios separados por coma/; o líneas
+  function parseList(txt) {
+    const SEC = /^(?:SECCION|SECC|SEC|S)?[\s.:#]*\d{1,2}$/;
+    const piezas = [];
+    for (let p of String(txt).normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase().split(/[,;\n]+/)) {
+      p = p.trim();
+      if (!p) continue;
+      if (SEC.test(p) && piezas.length) piezas[piezas.length - 1] += " " + p; else piezas.push(p);
+    }
+    const out = [];
+    for (const p of piezas) {
+      const m = p.match(/^(.+?)(?:[\s\-_.:#]+(?:SECCION|SECC|SEC|S)?|SECCION|SECC|SEC|S)[\s.:#]*(\d{1,2})$/);
+      if (!m) continue;
+      // la sigla es la última "palabra" con números (ignora viñetas y nombres: "-Capstone TEI401")
+      const sigla = m[1].split(/\s+/).filter(w => /[A-Z]/.test(w) && /\d/.test(w)).pop();
+      if (!sigla) continue;
+      const r = { sigla: sigla.replace(/^[^A-Z]+/, ""), sec: +m[2] };
+      if (!out.some(x => key(x) === key(r))) out.push(r);
+    }
+    return out;
+  }
+
+  // ---------- UI ----------
+  const fmtDia = new Intl.DateTimeFormat("es-CL", { weekday: "short", day: "numeric", month: "short", timeZone: "America/Santiago" });
+  const fmtHora = new Intl.DateTimeFormat("es-CL", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "America/Santiago" });
+
+  function nombreDe(r) {
+    const e = ALL.find(e => e.sigla === r.sigla && e.seccion === r.sec && e.sede_id === state.sede);
+    return e ? e.asignatura : null;
+  }
+
+  function renderDatalist() {
+    const seen = new Map();
+    for (const e of ALL) if (e.sede_id === state.sede) seen.set(e.sigla + " " + e.seccion, e.asignatura);
+    $("#ramosList").innerHTML = [...seen].sort().map(([k, n]) => `<option value="${k}">${esc(n)}</option>`).join("");
+  }
+
+  function renderChips() {
+    $("#chips").innerHTML = state.ramos.map((r, i) => {
+      const n = ALL.length ? nombreDe(r) : "";
+      return `<span class="chip ${ALL.length && !n ? "bad" : ""}" title="${n ? esc(n) : "Sin fechas publicadas en esta sede"}">
+        <b>${r.sigla}-${r.sec}</b> <small>${n ? esc(n) : (ALL.length ? "sin fechas publicadas" : "")}</small>
+        <button type="button" aria-label="Quitar ${r.sigla}-${r.sec}" data-i="${i}">×</button></span>`;
+    }).join("");
+  }
+
+  function misEvals() {
+    const want = new Set(state.ramos.map(key));
+    return ALL.filter(e => e.sede_id === state.sede && want.has(e.sigla + "-" + e.seccion));
+  }
+
+  function renderTable() {
+    const now = Date.now();
+    const showPast = $("#showPast").checked;
+    const rows = misEvals();
+    const visibles = rows.filter(e => showPast || new Date(e.fin) >= now);
+    if (!state.ramos.length) {
+      $("#tbody").innerHTML = `<tr><td colspan="4" class="empty">Agrega tus ramos arriba para ver tus fechas.</td></tr>`;
+    } else if (!visibles.length) {
+      $("#tbody").innerHTML = `<tr><td colspan="4" class="empty">${rows.length ? "No te quedan evaluaciones 🎉 (marca “mostrar las que ya pasaron”)." : "No hay fechas publicadas para estos ramos en esta sede."}</td></tr>`;
+    } else {
+      $("#tbody").innerHTML = visibles.map(e => {
+        const ini = new Date(e.inicio), fin = new Date(e.fin);
+        const past = fin < now;
+        const dias = Math.ceil((new Date(ini.toDateString()) - new Date(new Date().toDateString())) / 864e5);
+        const cd = past ? "" : dias === 0 ? `<span class="soon">hoy</span>` : dias === 1 ? `<span class="soon">mañana</span>`
+                 : `<span class="${dias <= 7 ? "soon" : "cd"}">en ${dias} días</span>`;
+        const ex = e.tipo.startsWith("Examen");
+        return `<tr class="${past ? "past" : ""}">
+          <td class="date"><b>${fmtDia.format(ini)}</b> ${cd}</td>
+          <td>${fmtHora.format(ini)}–${fmtHora.format(fin)}</td>
+          <td><span class="tag ${ex ? "examen" : "prueba"}">${esc(e.tipo)}</span></td>
+          <td>${esc(e.asignatura)} <span class="code">${e.sigla}-${e.seccion}</span></td></tr>`;
+      }).join("");
+    }
+  }
+
+  function subUrls() {
+    const p = new URLSearchParams({ r: rParam(), sede: state.sede });
+    if (state.alarmas) p.set("alarmas", state.alarmas);
+    const https = `${location.origin}/calendario.ics?${p}`;
+    return { https, webcal: https.replace(/^https?:/, "webcal:") };
+  }
+
+  function renderSubs() {
+    const ok = state.ramos.length > 0;
+    $("#subsCard").style.opacity = ok ? 1 : .5;
+    const { https, webcal } = subUrls();
+    $("#subUrl").value = ok ? https : "Agrega ramos primero";
+    $("#appleBtn").href = ok ? webcal : "#";
+    $("#googleBtn").href = ok ? "https://calendar.google.com/calendar/render?cid=" + encodeURIComponent(webcal) : "#";
+    $("#outlookBtn").href = ok ? "https://outlook.live.com/calendar/0/addfromweb?name=UAI%20Evaluaciones&url=" + encodeURIComponent(https) : "#";
+    $("#icsBtn").href = ok ? https + "&descargar=1" : "#";
+    for (const id of ["#appleBtn", "#googleBtn", "#outlookBtn", "#icsBtn"]) $(id).toggleAttribute("aria-disabled", !ok);
+  }
+
+  function render() { renderChips(); renderTable(); renderSubs(); save(); }
+
+  function msg(t) { const m = $("#msg"); m.hidden = !t; m.textContent = t || ""; }
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  // ---------- eventos ----------
+  $("#addForm").addEventListener("submit", ev => {
+    ev.preventDefault();
+    const txt = $("#ramoInput").value;
+    const nuevos = parseList(txt);
+    if (!nuevos.length) { if (txt.trim()) msg("No entendí ese ramo. Escribe la sigla y la sección, ej: TICS312 1"); return; }
+    const malos = [];
+    for (const r of nuevos) {
+      if (!state.ramos.some(x => key(x) === key(r))) state.ramos.push(r);
+      if (ALL.length && !nombreDe(r)) malos.push(key(r));
+    }
+    msg(malos.length ? `Sin fechas publicadas en ${state.sede === "vina" ? "Viña" : "Santiago"} para: ${malos.join(", ")}. Revisa la sigla, la sección y la sede (lo dejé agregado por si lo publican después).` : "");
+    $("#ramoInput").value = "";
+    render();
+  });
+  $("#chips").addEventListener("click", ev => {
+    const i = ev.target.closest("button[data-i]")?.dataset.i;
+    if (i != null) { state.ramos.splice(+i, 1); msg(""); render(); }
+  });
+  document.querySelectorAll("input[name=sede]").forEach(r => r.addEventListener("change", () => {
+    state.sede = r.value; renderDatalist(); render();
+  }));
+  $("#alarmas").addEventListener("change", e => { state.alarmas = e.target.value; render(); });
+  $("#showPast").addEventListener("change", renderTable);
+  for (const id of ["#appleBtn", "#googleBtn", "#outlookBtn", "#icsBtn"])
+    $(id).addEventListener("click", e => { if (!state.ramos.length) { e.preventDefault(); $("#ramoInput").focus(); } });
+  $("#copyBtn").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText($("#subUrl").value); } catch { $("#subUrl").select(); document.execCommand("copy"); }
+    $("#copyBtn").textContent = "¡Copiado!"; setTimeout(() => $("#copyBtn").textContent = "Copiar link", 1500);
+  });
+  $("#csvBtn").addEventListener("click", () => {
+    const rows = [["Fecha", "Inicio", "Fin", "Tipo", "Sigla", "Sección", "Asignatura", "Profesor", "Sede"]];
+    const d = new Intl.DateTimeFormat("es-CL", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Santiago" });
+    for (const e of misEvals()) {
+      const i = new Date(e.inicio), f = new Date(e.fin);
+      rows.push([d.format(i), fmtHora.format(i), fmtHora.format(f), e.tipo, e.sigla, e.seccion, e.asignatura, e.profesor, e.sede]);
+    }
+    const csv = "﻿" + rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
+    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(new Blob([csv], { type: "text/csv" })), download: "mis-evaluaciones-uai.csv" });
+    a.click(); URL.revokeObjectURL(a.href);
+  });
+
+  // ---------- inicio ----------
+  load();
+  document.querySelector(`input[name=sede][value="${state.sede}"]`)?.click();
+  $("#alarmas").value = state.alarmas;
+  render();
+  fetch("/api/evaluaciones").then(r => r.ok ? r.json() : Promise.reject(r.status)).then(d => {
+    ALL = d.evaluaciones;
+    const a = d.actualizado || {};
+    $("#estado").textContent = "";
+    $("#fuente").textContent = `Datos oficiales actualizados por la UAI: pruebas ${a.pruebas || "—"}, exámenes ${a.examenes || "—"}.`;
+    renderDatalist(); render();
+  }).catch(() => {
+    $("#estado").textContent = "No se pudo cargar el calendario oficial en este momento. Intenta recargar la página en unos minutos.";
+  });
+})();
+</script>
+</body>
+</html>
